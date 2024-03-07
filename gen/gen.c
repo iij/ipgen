@@ -4327,7 +4327,18 @@ main(int argc, char *argv[])
 
 		/* Set maxlinkspeed */
 		for (j = 0; j < sizeof(ifflags)/sizeof(ifflags[0]); j++) {
-			uint64_t linkspeed = interface_get_baudrate(ifname[i]);
+			uint64_t linkspeed;
+			int trials = 5;
+			while (--trials > 0) {
+				linkspeed = interface_get_baudrate(ifname[i]);
+				if (linkspeed > 0)
+					break;
+				sleep(1);
+			}
+			if (linkspeed == 0) {
+				fprintf(stderr, "%s: failed to determine linkspeed\n", ifname[i]);
+				exit(1);
+			}
 
 			if (linkspeed > 0) {
 				if (linkspeed < IF_Mbps(10)) {

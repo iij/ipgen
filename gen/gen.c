@@ -409,7 +409,9 @@ static int getdrvname(const char *, char *);
 #else
 static int getifunit(const char *, char *, unsigned long *);
 #endif
+static void interface_wait_linkupdown(const char *, const int, const int);
 static void interface_wait_linkup(const char *);
+static void interface_wait_linkdown(const char *);
 static void interface_init(int);
 static void interface_setup(int, const char *);
 static void interface_open(int);
@@ -1166,14 +1168,14 @@ transmit_set(int ifno, int on)
 }
 
 static void
-interface_wait_linkup(const char *ifname)
+interface_wait_linkupdown(const char *ifname, const int up, const int sec)
 {
 	int i;
 
-	printf_verbose("%s: waiting link up .", ifname);
+	printf_verbose("%s: waiting link %s .", ifname, up ? "up" : "down");
 	fflush(stdout);
-	for (i = 100; i >= 0; i--) {
-		if (interface_is_active(ifname))
+	for (i = sec * 2; i >= 0; i--) {
+		if (interface_is_active(ifname) == up)
 			break;
 		usleep(500000);
 		printf_verbose(".");
@@ -1185,6 +1187,20 @@ interface_wait_linkup(const char *ifname)
 		printf_verbose(" giving up\n");
 	}
 	fflush(stdout);
+}
+
+static void
+interface_wait_linkup(const char *ifname)
+{
+
+	interface_wait_linkupdown(ifname, 1, 10);
+}
+
+static void
+interface_wait_linkdown(const char *ifname)
+{
+
+	interface_wait_linkupdown(ifname, 0, 5);
 }
 
 static void
@@ -4553,13 +4569,20 @@ main(int argc, char *argv[])
 	}
 
 	/*
-	 * open netmap devices
+	 * Initialize packet transmission infrastructure
 	 */
-	if (!opt_txonly)
-		interface_open(0);	/* RX */
 	if (!opt_rxonly)
 		interface_open(1);	/* TX */
+	if (!opt_txonly)
+		interface_open(0);	/* RX */
 
+	/* First, make sure interfaces down */
+	if (!opt_txonly)
+		interface_wait_linkdown(ifname[0]);	/* RX */
+	if (!opt_rxonly)
+		interface_wait_linkdown(ifname[1]);	/* TX */
+
+	/* Then, check interfaces up */
 	if (!opt_rxonly)
 		interface_wait_linkup(ifname[1]);	/* TX */
 	if (!opt_txonly)

@@ -26,6 +26,6 @@ cleandir:
 depend:
 
 install:
-	install -o root -g wheel -m 555 log2graph ${PREFIX}/bin/ipgen_log2graph
-	install -o root -g wheel -m 444 -d ${PREFIX}/share/ipgen/script
-	install -o root -g wheel -m 444 ${FILES} ${PREFIX}/share/ipgen/script
+	install -o root -g wheel -m 555 log2graph ${DESTDIR}${PREFIX}/bin/ipgen_log2graph
+	install -o root -g wheel -m 755 -d ${DESTDIR}${PREFIX}/share/ipgen/script
+	install -o root -g wheel -m 444 ${FILES} ${DESTDIR}${PREFIX}/share/ipgen/script

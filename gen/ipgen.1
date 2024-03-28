@@ -1,0 +1,201 @@
+.\"-
+.\" Copyright (c) 2024 Hiroki Sato <hrs@allbsd.org>
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.Dd February 29, 2024
+.Dt IPGEN 1
+.Os
+.Sh NAME
+.Nm ipgen
+.Nd L2 and L3 traffic generator and interactive benchmarking utility
+.Sh SYNOPSIS
+.Nm
+.Op Fl V Ar vlanid
+.Op Fl P
+.Fl R Ar rx-ifname , Ns Ar gateway-addr , Ns Op Ar my-addr Ns Op Ar /prefix
+.Op Fl V Ar vlanid
+.Op Fl P
+.Fl T Ar tx-ifname , Ns Ar gateway-addr , Ns Op Ar my-addr Ns Op Ar /prefix
+.Op Fl H Ar hz
+.Op Fl n Ar npkt
+.Op Fl -ipg
+.Op Fl -burst
+.Op Fl S Ar script
+.Op Fl L Ar logfile
+.Op Fl s Ar packet-size
+.Op Fl p Ar packet-per-second
+.Op Fl t Ar duration
+.Op Fl f
+.Op Fl v
+.Op Fl X
+.Op Fl XX
+.Op Fl XXX
+.Op Fl -tcp
+.Op Fl -udp
+.Op Fl -fragment
+.Op Fl -l1-bps
+.Op Fl -l2-bps
+.Op Fl -allnet
+.Op Fl -saddr Ar begin Ns Op - Ns Ar end
+.Op Fl -daddr Ar begin Ns Op - Ns Ar end
+.Op Fl -sport Ar begin Ns Op - Ns Ar end
+.Op Fl -dport Ar begin Ns Op - Ns Ar end
+.Op Fl -flowlist Ar file
+.Op Fl -flowsort
+.Op Fl -flowdump
+.Op Fl F Ar nflow
+.Op Fl -rfc2544
+.Op Fl -rfc2544-interval Ar seconds
+.Op Fl -rfc2544-no-early-finish
+.Op Fl -rfc2544-output-json Ar file
+.Op Fl -rfc2544-pktsize Ar size , Ns Op Ar size, ...
+.Op Fl -rfc2544-pps-resolution Ar percent
+.Op Fl -rfc2544-slowstart
+.Op Fl -rfc2544-tolerable-error-rate Ar percent
+.Op Fl -rfc2544-trial-duration Ar seconds
+.Op Fl -rfc2544-warming-duration Ar seconds
+.Op Fl -nocurses
+.Op Fl D Ar file
+.Op Fl d
+.Op Fl -fail-if-dropped
+.Sh DESCRIPTION
+The
+.Nm
+utility is an L2 and L3 traffic generator with the following design goals:
+.Pp
+.Bl -dash -compact
+.It
+Wire-speed support based on
+.Li Netmap
+API
+on
+.Fx
+or
+.Li XDP
+on Linux,
+.It
+Benchmarking capability with multiple packet flows,
+.It
+Interative user interface to show various statistics,
+and
+.It
+RFC 2544 benchmarking methodology.
+.El
+.Sh EXIT STATUS
+.Ex -std
+.Sh EXAMPLES
+The following example does a loopback test assuming
+.Li igb1
+with MAC address
+.Li 00:11:22:33:44:55
+and
+.Li igb2
+with
+.Li 66:77:88:99:aa:bb
+are on a box running
+.Nm
+and the two ports are directrly connected by
+an Ethernet cable
+.Pq back-to-back connection defined in Section 3.1, RFC 1242 .
+Note that each gateway address must be specified to the MAC address
+of another endpoint:
+.Pp
+.Bd -literal -offset indent -compact
+ipgen -T igb1,66:77:88:99:aa:bb -R igb2,00:11:22:33:44:55
+.Ed
+.Pp
+If the two Ethernet cables are connected to
+.Li igb1
+and
+.Li igb2
+and the another endpoint is a bridge box,
+such as an Ethernet hub or switch to form a single L2 segment,
+the same command performs an L2 forwarding performance test of the bridge box.
+.Pp
+The following example does an L3 forwarding performance test.
+A box running
+.Nm
+has
+.Li igb1
+with an address
+.Li 192.18.0.1/24
+and
+.Li igb2
+with
+.Li 192.18.1.1/24 ,
+and two Ethernet cables are connected to another box
+.Pq DUT: Device Under Test
+that can forward TCP/IP packets,
+such as a router.
+This assumes that the DUT has
+.Li 192.18.0.2/24
+and
+.Li 192.18.1.2/24
+on the interfaces connected to each segment:
+.Pp
+.Bd -literal -offset indent -compact
+ipgen -T igb1,192.18.0.2,192.18.0.1/24 -R igb2,192.18.1.2,192.18.1.1/24
+.Ed
+.Pp
+The flag
+.Fl -rfc2544
+enables RFC 2544 benchmarking report.
+When specified,
+.Nm
+shows throughput
+.Pq Section 3.17 in RFC 1242
+and frame loss rate
+.Pq Section 3.6 in RFC 1242
+of a DUT throughout the entire range of
+input data rates and frame sizes
+after the test finishes.
+The following example shows RFC 2544 benchmarking report for the same testing
+setup for the L2 forwarding example:
+.Pp
+.Bd -literal -offset indent -compact
+ipgen -T igb1,66:77:88:99:aa:bb -R igb2,00:11:22:33:44:55 --rfc2544
+.Ed
+.Sh SEE ALSO
+.Xr netmap 4
+.Rs
+.%A S. Bradner
+.%T Benchmarking Terminology for Network Interconnection Devices
+.%R RFC 1242
+.%D July 1991
+.Re
+.Rs
+.%A S. Bradner
+.%A J. McQuaid
+.%T Benchmarking Methodology for Network Interconnect Devices
+.%R RFC 2544
+.%D March 1999
+.Re
+.Sh AUTHORS
+.An -nosplit
+The
+.Nm
+utility was designed and implemented by
+.An Ryota Ozaki Aq Mt ryo@iij.ad.jp .
+.Pp
+This manual page was written by
+.An Hiroki Sato Aq Mt hrs@FreeBSD.org .

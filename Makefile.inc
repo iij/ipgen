@@ -1,1 +1,3 @@
-PREFIX =	/usr/local
+PREFIX?=	/usr/local
+LOCALBASE?=	${PREFIX}
+MANDIR?=	${PREFIX}/share/man

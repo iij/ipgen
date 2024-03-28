@@ -12,5 +12,5 @@ cleandir:
 depend:
 
 install:
-	install -o root -g wheel -m 444 -d ${PREFIX}/share/ipgen/htdocs
-	install -o root -g wheel -m 444 ${FILES} ${PREFIX}/share/ipgen/htdocs
+	install -o root -g wheel -m 755 -d ${DESTDIR}${PREFIX}/share/ipgen/htdocs
+	install -o root -g wheel -m 444 ${FILES} ${DESTDIR}${PREFIX}/share/ipgen/htdocs

@@ -2,12 +2,12 @@ include ../Makefile.inc
 
 PROG=		ipgen
 SRCS=		gen.c util.c webserv.c pbuf.c sequencecheck.c seqtable.c item.c genscript.c flowparse.c pktgen_item.c
-CFLAGS+=	-I.. -I/usr/local/include -g -DHTDOCS=\"${PREFIX}/share/ipgen/htdocs\"
+CFLAGS+=	-I.. -I${LOCALBASE}/include -g -DHTDOCS=\"${PREFIX}/share/ipgen/htdocs\"
 CFLAGS+=	-Wall -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith
 CFLAGS+=	-Wreturn-type -Wswitch # -Wshadow XXX for gen.c
 CFLAGS+=	-Wcast-qual -Wwrite-strings
 CFLAGS+=	-Wextra
-LDADD=		-L../libpkt -lpkt -L../libaddrlist -L/usr/local/lib -laddrlist -lpthread -lc -lcurses -levent -lmd
+LDADD=		-L../libpkt -lpkt -L../libaddrlist -L${LOCALBASE}/lib -laddrlist -lpthread -lc -lcurses -levent -lmd
 
 ifeq ($(shell uname),Linux)
 LDADD+=		-lbsd -lcrypto -lbpf
@@ -46,7 +46,9 @@ cleandir: clean
 	rm -f .depend GPATH GRTAGS GSYMS GTAGS
 
 install:
-	install -o root -g wheel -m 550 ipgen ${PREFIX}/bin/
+	install -o root -g wheel -m 550 ipgen ${DESTDIR}${PREFIX}/bin/
+	install -o root -g wheel -m 755 -d ${DESTDIR}${MANDIR}/man1
+	install -o root -g wheel -m 444 ipgen.1 ${DESTDIR}${MANDIR}/man1
 
 sequencecheck: sequencecheck.c seqcheck_test.c
 	$(CC) -o $@ sequencecheck.c $(CFLAGS) -DTEST

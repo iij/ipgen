@@ -47,9 +47,9 @@ gmake depend && gmake && sudo gmake install
 
 ```
 # Ubuntu
-apt install libbsd-dev clang libssl-dev libevent-dev libbpf-dev bmake
-# Linux
-dnf install bmake libevent-devel libxdp-devel libbpf-devel openssl-devel clang libbsd-devel ncurses-devel
+apt install libbsd-dev clang libssl-dev libevent-dev libxdp-dev libbpf-dev
+# Fedora
+dnf install libevent-devel libxdp-devel libbpf-devel openssl-devel clang libbsd-devel ncurses-devel
 
 git clone https://github.com/iij/ipgen.git
 cd ipgen

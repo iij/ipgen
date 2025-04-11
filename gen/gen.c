@@ -710,6 +710,9 @@ getdrvname(const char *ifname, char *drvname)
 	if (n == -1)
 		return -1;
 
+	/* NUL terminate */
+	linkbuf[n] = '\0';
+
 	/* ex /sys/bus/pci/drivers/ixgbe */
 	drvstr = strrchr(linkbuf, '/');
 	if (drvstr == NULL)
